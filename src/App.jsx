@@ -1,307 +1,188 @@
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
-const starterMemos = [
+const initialConversations = [
   {
     id: 1,
-    title: 'Team check-in',
-    note: 'Quick update on launch timeline and customer feedback.',
-    duration: 42,
-    sentAt: '2026-10-22T09:42:00Z',
-    status: 'Sent',
-    url: '',
+    title: 'Daily briefing',
+    preview: 'I drafted your updates and next steps.',
+    messages: [
+      { id: 1, role: 'assistant', text: 'Good morning! I can help summarize notes, draft replies, and organize your tasks.' },
+      { id: 2, role: 'user', text: 'Can you turn my voice notes into a clean meeting summary?' },
+      { id: 3, role: 'assistant', text: 'Absolutely — I can structure it into highlights, action items, and follow-ups in seconds.' },
+    ],
   },
   {
     id: 2,
-    title: 'Ideas for the weekend',
-    note: 'Remember to test the new onboarding flow and capture the call notes.',
-    duration: 28,
-    sentAt: '2026-10-21T19:18:00Z',
-    status: 'Sent',
-    url: '',
+    title: 'Customer follow-up',
+    preview: 'Need to send a quick response to the beta group.',
+    messages: [
+      { id: 1, role: 'assistant', text: 'I can help write a polished reply to customers and prioritize the next steps.' },
+    ],
   },
 ];
 
-function formatDuration(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = String(totalSeconds % 60).padStart(2, '0');
-  return `${minutes}:${seconds}`;
-}
+const quickPrompts = [
+  'Summarize my latest voice memo',
+  'Draft a customer reply',
+  'Turn notes into a task list',
+  'Create a short update for the team',
+];
 
-function formatDateLabel(isoString) {
-  try {
-    return new Intl.DateTimeFormat('en', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(new Date(isoString));
-  } catch {
-    return 'Just now';
+function pickAssistantReply(input) {
+  const normalized = input.toLowerCase();
+
+  if (normalized.includes('summary')) {
+    return 'Here is your summary: main update is on track, customer feedback is positive, and the remaining risk is onboarding clarity. Next step: share the revised timeline with the team by 4 PM.';
   }
+
+  if (normalized.includes('reply') || normalized.includes('email') || normalized.includes('message')) {
+    return 'Here is a polished draft: “Thanks for the update — we really appreciate the feedback. We have noted the points you shared and are adjusting the flow to make onboarding smoother. We will keep you posted on the next milestone.”';
+  }
+
+  if (normalized.includes('task') || normalized.includes('todo') || normalized.includes('plan')) {
+    return 'I have organized the work into 3 tasks: 1) finalize onboarding checklist, 2) review customer comments, 3) confirm launch timing with stakeholders.';
+  }
+
+  if (normalized.includes('update') || normalized.includes('team')) {
+    return 'Team update: progress is moving well, blockers remain minimal, and the key focus is improving the user journey and final QA before launch.';
+  }
+
+  return 'I can help with that. I can summarize audio notes, draft messages, or turn rough ideas into actionable next steps.';
 }
 
 function App() {
-  const recorderRef = useRef(null);
-  const streamRef = useRef(null);
-  const timerRef = useRef(null);
+  const [conversations, setConversations] = useState(initialConversations);
+  const [activeId, setActiveId] = useState(initialConversations[0].id);
+  const [draft, setDraft] = useState('');
 
-  const [memos, setMemos] = useState(starterMemos);
-  const [title, setTitle] = useState('');
-  const [note, setNote] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
-  const [audioName, setAudioName] = useState('voice-memo.webm');
-  const [isRecording, setIsRecording] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const [status, setStatus] = useState('Ready to record');
+  const activeConversation = useMemo(
+    () => conversations.find((chat) => chat.id === activeId) ?? conversations[0],
+    [activeId, conversations],
+  );
 
-  useEffect(() => {
-    return () => {
-      clearInterval(timerRef.current);
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-    };
-  }, [audioUrl]);
-
-  const activeMemo = memos[0];
-
-  const beginRecording = async () => {
-    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-      setStatus('Microphone recording is not supported in this browser.');
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
-      const recorder = new MediaRecorder(stream);
-      const chunks = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-        const nextUrl = URL.createObjectURL(blob);
-
-        setAudioUrl((currentUrl) => {
-          if (currentUrl) {
-            URL.revokeObjectURL(currentUrl);
-          }
-          return nextUrl;
-        });
-
-        setAudioName(blob.type.includes('mp4') ? 'voice-memo.mp4' : 'voice-memo.webm');
-        stream.getTracks().forEach((track) => track.stop());
-        setIsRecording(false);
-        setStatus('Voice memo captured');
-      };
-
-      recorderRef.current = recorder;
-      recorder.start();
-      setElapsed(0);
-      setIsRecording(true);
-      setStatus('Recording in progress');
-
-      clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setElapsed((current) => current + 1);
-      }, 1000);
-    } catch (error) {
-      console.error(error);
-      setStatus('Microphone permission was denied.');
-    }
-  };
-
-  const stopRecording = () => {
-    if (!recorderRef.current || !isRecording) return;
-
-    recorderRef.current.stop();
-    clearInterval(timerRef.current);
-  };
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const objectUrl = URL.createObjectURL(file);
-    setAudioUrl((currentUrl) => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl);
-      }
-      return objectUrl;
-    });
-    setAudioName(file.name || 'voice-memo.wav');
-    setStatus('Voice memo uploaded');
-  };
-
-  const sendMemo = () => {
-    if (!audioUrl) {
-      setStatus('Record or upload a voice memo before sending.');
-      return;
-    }
-
-    const memo = {
+  const addNewChat = () => {
+    const newChat = {
       id: Date.now(),
-      title: title.trim() || `Voice memo ${memos.length + 1}`,
-      note: note.trim() || 'No extra notes attached.',
-      duration: elapsed || 12,
-      sentAt: new Date().toISOString(),
-      status: 'Sent',
-      url: audioUrl,
+      title: 'New chat',
+      preview: 'A fresh conversation',
+      messages: [{ id: Date.now(), role: 'assistant', text: 'Hi! I can help you summarize, draft, or organize anything you send me.' }],
     };
 
-    setMemos((current) => [memo, ...current]);
-    setTitle('');
-    setNote('');
-    setStatus('Voice memo sent');
+    setConversations((current) => [newChat, ...current]);
+    setActiveId(newChat.id);
+    setDraft('');
+  };
+
+  const sendMessage = () => {
+    const trimmed = draft.trim();
+    if (!trimmed) return;
+
+    const userMessage = {
+      id: Date.now(),
+      role: 'user',
+      text: trimmed,
+    };
+
+    const assistantMessage = {
+      id: Date.now() + 1,
+      role: 'assistant',
+      text: pickAssistantReply(trimmed),
+    };
+
+    setConversations((current) =>
+      current.map((chat) =>
+        chat.id === activeId
+          ? {
+              ...chat,
+              title: chat.messages.length === 0 ? 'New chat' : chat.title,
+              preview: trimmed,
+              messages: [...chat.messages, userMessage, assistantMessage],
+            }
+          : chat,
+      ),
+    );
+
+    setDraft('');
   };
 
   return (
-    <div className="memo-app-shell">
-      <header className="topbar glass-panel">
-        <div className="brand-wrap">
-          <div className="brand-mark">M</div>
+    <div className="chat-shell">
+      <aside className="sidebar glass-panel">
+        <div className="brand-row">
+          <div className="brand-icon">M</div>
           <div>
-            <p className="eyebrow">voice memo</p>
+            <p className="eyebrow">voice AI</p>
             <h1>MemoWave</h1>
           </div>
         </div>
 
-        <div className="top-actions">
-          <button type="button" className="secondary-btn" onClick={() => setStatus('Draft saved locally')}>
-            Save draft
-          </button>
-          <button type="button" className="primary-btn" onClick={isRecording ? stopRecording : beginRecording}>
-            {isRecording ? 'Stop recording' : 'New memo'}
-          </button>
-        </div>
-      </header>
+        <button type="button" className="new-chat-btn" onClick={addNewChat}>
+          + New chat
+        </button>
 
-      <main className="workspace">
-        <section className="composer glass-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">capture</p>
-              <h2>Send a voice memo</h2>
-            </div>
-            <span className={`status-pill ${isRecording ? 'live' : ''}`}>
-              {isRecording ? 'Recording' : 'Ready'}
-            </span>
-          </div>
-
-          <div className="recording-card">
-            <div className="wave-box" aria-label="recording indicator">
-              {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
-                <span
-                  key={item}
-                  className={isRecording ? 'bar active' : 'bar'}
-                  style={{ animationDelay: `${item * 100}ms` }}
-                />
-              ))}
-            </div>
-
-            <div className="recording-meta">
-              <div>
-                <p className="meta-label">Duration</p>
-                <strong>{formatDuration(elapsed)}</strong>
-              </div>
-              <div>
-                <p className="meta-label">File</p>
-                <strong>{audioName}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div className="field-group">
-            <label htmlFor="memo-title">Memo title</label>
-            <input
-              id="memo-title"
-              type="text"
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Morning update"
-            />
-          </div>
-
-          <div className="field-group">
-            <label htmlFor="memo-note">Note</label>
-            <textarea
-              id="memo-note"
-              rows={4}
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Add a short summary before sending..."
-            />
-          </div>
-
-          <div className="upload-row">
-            <label className="upload-btn">
-              <input type="file" accept="audio/*" onChange={handleFileUpload} />
-              Upload audio
-            </label>
-            <button type="button" className="ghost-btn" onClick={() => setAudioUrl('')}>
-              Clear
-            </button>
-          </div>
-
-          <div className="preview-box">
-            {audioUrl ? (
-              <audio controls src={audioUrl} />
-            ) : (
-              <div className="empty-state">
-                <span>Record or upload a voice memo to preview it here.</span>
-              </div>
-            )}
-          </div>
-
-          <div className="footer-actions">
-            <p className="status-text">{status}</p>
-            <button type="button" className="primary-btn send-btn" onClick={sendMemo}>
-              Send memo
-            </button>
-          </div>
-        </section>
-
-        <aside className="inbox glass-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">sent</p>
-              <h2>Recent memos</h2>
-            </div>
-            <span className="chip">{memos.length}</span>
-          </div>
-
-          <div className="memo-list">
-            {memos.map((memo) => (
-              <article key={memo.id} className={`memo-card ${memo.id === activeMemo?.id ? 'active' : ''}`}>
-                <div className="memo-topline">
-                  <div>
-                    <h3>{memo.title}</h3>
-                    <span>{memo.status}</span>
-                  </div>
-                  <strong>{formatDuration(memo.duration || 0)}</strong>
-                </div>
-
-                <p>{memo.note}</p>
-
-                {memo.url ? <audio controls src={memo.url} /> : null}
-
-                <div className="memo-footer">
-                  <time>{formatDateLabel(memo.sentAt)}</time>
-                  <button type="button" className="text-btn">
-                    Replay
-                  </button>
-                </div>
-              </article>
+        <div className="nav-group">
+          <p className="section-label">Recent</p>
+          <div className="chat-list">
+            {conversations.map((chat) => (
+              <button
+                key={chat.id}
+                type="button"
+                className={`chat-item ${chat.id === activeId ? 'active' : ''}`}
+                onClick={() => setActiveId(chat.id)}
+              >
+                <span>{chat.title}</span>
+                <small>{chat.preview}</small>
+              </button>
             ))}
           </div>
-        </aside>
+        </div>
+      </aside>
+
+      <main className="chat-panel glass-panel">
+        <header className="chat-header">
+          <div>
+            <p className="eyebrow">assistant</p>
+            <h2>{activeConversation?.title}</h2>
+          </div>
+          <div className="header-actions">
+            <span className="status-pill">Online</span>
+            <button type="button" className="icon-btn">●</button>
+          </div>
+        </header>
+
+        <div className="message-list">
+          {activeConversation?.messages.map((message) => (
+            <div key={message.id} className={`message-row ${message.role}`}>
+              <div className="avatar">{message.role === 'assistant' ? 'AI' : 'You'}</div>
+              <div className="bubble">
+                {message.text}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="prompt-strip">
+          {quickPrompts.map((prompt) => (
+            <button key={prompt} type="button" className="prompt-pill" onClick={() => setDraft(prompt)}>
+              {prompt}
+            </button>
+          ))}
+        </div>
+
+        <div className="composer">
+          <textarea
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            rows={3}
+            placeholder="Ask MemoWave anything..."
+          />
+          <div className="composer-actions">
+            <button type="button" className="secondary-btn">Attach audio</button>
+            <button type="button" className="primary-btn" onClick={sendMessage}>
+              Send
+            </button>
+          </div>
+        </div>
       </main>
     </div>
   );
