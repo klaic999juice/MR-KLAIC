@@ -29,7 +29,47 @@ const presetMap = {
   Mono: { brightness: 105, contrast: 115, saturation: 40, sepia: 0, grayscale: 100, blur: 0, hue: 0, rotate: 0, flipH: false, flipV: false },
   Drama: { brightness: 96, contrast: 140, saturation: 140, sepia: 10, grayscale: 0, blur: 1, hue: -10, rotate: 0, flipH: false, flipV: false },
   Dream: { brightness: 110, contrast: 90, saturation: 120, sepia: 24, grayscale: 0, blur: 2, hue: 18, rotate: 0, flipH: false, flipV: false },
-  Soft: { brightness: 115, contrast: 90, saturation: 80, sepia: 8, grayscale: 10, blur: 1, hue: 0, rotate: 0, flipH: false, flipV: false }
+  Soft: { brightness: 115, contrast: 90, saturation: 80, sepia: 8, grayscale: 10, blur: 1, hue: 0, rotate: 0, flipH: false, flipV: false },
+};
+
+const colorMap = {
+  red: '#ef4444',
+  blue: '#60a5fa',
+  green: '#34d399',
+  yellow: '#facc15',
+  gold: '#facc15',
+  orange: '#fb923c',
+  purple: '#a78bfa',
+  pink: '#f472b6',
+  white: '#f8fafc',
+  black: '#0f172a',
+  teal: '#2dd4bf',
+  gray: '#94a3b8',
+  grey: '#94a3b8',
+};
+
+const typeMap = {
+  star: ['star', 'sparkle', 'spark', 'burst'],
+  heart: ['heart', 'love'],
+  circle: ['circle', 'orb', 'dot', 'bubble'],
+  cloud: ['cloud', 'clouds'],
+  flower: ['flower', 'rose', 'blossom'],
+  square: ['square', 'box', 'tile'],
+  triangle: ['triangle', 'mountain'],
+  sun: ['sun', 'sunburst'],
+  text: ['text', 'label', 'word', 'headline'],
+};
+
+const locationMap = {
+  'top-left': { x: 0.22, y: 0.24 },
+  'top-right': { x: 0.82, y: 0.24 },
+  'bottom-left': { x: 0.2, y: 0.8 },
+  'bottom-right': { x: 0.8, y: 0.8 },
+  center: { x: 0.5, y: 0.5 },
+  left: { x: 0.25, y: 0.5 },
+  right: { x: 0.75, y: 0.5 },
+  top: { x: 0.5, y: 0.25 },
+  bottom: { x: 0.5, y: 0.75 },
 };
 
 function App() {
@@ -46,12 +86,136 @@ function App() {
   const [rotate, setRotate] = useState(0);
   const [flipH, setFlipH] = useState(false);
   const [flipV, setFlipV] = useState(false);
+  const [objects, setObjects] = useState([]);
+  const [prompt, setPrompt] = useState('Add a golden star in the top-right');
   const [activePreset, setActivePreset] = useState('Natural');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     renderCanvas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageSrc, brightness, contrast, saturation, sepia, grayscale, blur, hue, rotate, flipH, flipV]);
+  }, [imageSrc, brightness, contrast, saturation, sepia, grayscale, blur, hue, rotate, flipH, flipV, objects]);
+
+  function drawObject(ctx, obj, canvasWidth, canvasHeight) {
+    const x = obj.x * canvasWidth;
+    const y = obj.y * canvasHeight;
+    const size = obj.size;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate((obj.rotation * Math.PI) / 180);
+
+    const fill = obj.color || '#facc15';
+    ctx.fillStyle = fill;
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 2;
+
+    switch (obj.type) {
+      case 'star': {
+        const outer = size;
+        const inner = size * 0.45;
+        ctx.beginPath();
+        for (let i = 0; i < 10; i += 1) {
+          const angle = (Math.PI / 5) * i - Math.PI / 2;
+          const radius = i % 2 === 0 ? outer : inner;
+          const px = Math.cos(angle) * radius;
+          const py = Math.sin(angle) * radius;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+      }
+      case 'heart': {
+        ctx.beginPath();
+        ctx.moveTo(0, size * 0.35);
+        ctx.bezierCurveTo(size * 0.55, -size * 0.7, size * 1.2, size * 0.2, 0, size * 1.1);
+        ctx.bezierCurveTo(-size * 1.2, size * 0.2, -size * 0.55, -size * 0.7, 0, size * 0.35);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+      }
+      case 'circle': {
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+      }
+      case 'sun': {
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.9, 0, Math.PI * 2);
+        ctx.fill();
+        for (let i = 0; i < 12; i += 1) {
+          const angle = (Math.PI / 6) * i;
+          ctx.save();
+          ctx.rotate(angle);
+          ctx.fillRect(0, -size * 1.2, size * 0.18, size * 0.7);
+          ctx.restore();
+        }
+        ctx.stroke();
+        break;
+      }
+      case 'cloud': {
+        ctx.beginPath();
+        ctx.arc(-size * 0.5, size * 0.15, size * 0.5, 0, Math.PI * 2);
+        ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2);
+        ctx.arc(size * 0.5, size * 0.15, size * 0.5, 0, Math.PI * 2);
+        ctx.quadraticCurveTo(size * 0.8, size * 0.7, 0, size * 0.9);
+        ctx.quadraticCurveTo(-size * 0.8, size * 0.7, -size * 0.5, size * 0.15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+      }
+      case 'flower': {
+        for (let i = 0; i < 8; i += 1) {
+          ctx.save();
+          ctx.rotate((Math.PI / 4) * i);
+          ctx.beginPath();
+          ctx.ellipse(0, -size * 0.4, size * 0.18, size * 0.75, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+      }
+      case 'square': {
+        ctx.fillRect(-size * 0.75, -size * 0.75, size * 1.5, size * 1.5);
+        ctx.strokeRect(-size * 0.75, -size * 0.75, size * 1.5, size * 1.5);
+        break;
+      }
+      case 'triangle': {
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 1.1);
+        ctx.lineTo(size * 1.05, size * 0.95);
+        ctx.lineTo(-size * 1.05, size * 0.95);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+      }
+      case 'text': {
+        ctx.font = `700 ${size}px Inter, sans-serif`;
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = 'rgba(15,23,42,0.35)';
+        ctx.lineWidth = 2;
+        ctx.strokeText(obj.label || 'Text', 0, 0);
+        ctx.fillText(obj.label || 'Text', 0, 0);
+        break;
+      }
+      default:
+        break;
+    }
+
+    ctx.restore();
+  }
 
   function renderCanvas() {
     const canvas = canvasRef.current;
@@ -77,6 +241,8 @@ function App() {
       ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) sepia(${sepia}%) grayscale(${grayscale}%) blur(${blur}px) hue-rotate(${hue}deg)`;
       ctx.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
       ctx.restore();
+
+      objects.forEach((obj) => drawObject(ctx, obj, canvas.width, canvas.height));
     };
 
     image.src = imageSrc;
@@ -125,6 +291,84 @@ function App() {
     setFlipV(false);
   }
 
+  function detectColor(text) {
+    const lower = text.toLowerCase();
+    for (const [name, hex] of Object.entries(colorMap)) {
+      if (lower.includes(name)) return hex;
+    }
+    return '#facc15';
+  }
+
+  function detectType(text) {
+    const lower = text.toLowerCase();
+    for (const [type, matches] of Object.entries(typeMap)) {
+      if (matches.some((match) => lower.includes(match))) return type;
+    }
+    return 'star';
+  }
+
+  function detectLocation(text) {
+    const lower = text.toLowerCase();
+    for (const [name, pos] of Object.entries(locationMap)) {
+      if (lower.includes(name)) return pos;
+    }
+    return { x: 0.8, y: 0.2 };
+  }
+
+  function applyAiPrompt() {
+    const trimmed = prompt.trim();
+    if (!trimmed) return;
+
+    const lower = trimmed.toLowerCase();
+    const removeMode = lower.startsWith('remove') || lower.startsWith('delete') || lower.includes('remove') || lower.includes('delete');
+
+    if (removeMode) {
+      const removalType = detectType(trimmed.replace(/remove|delete|the|a|an/g, ' '));
+
+      if (lower.includes('all') || lower.includes('everything')) {
+        setObjects([]);
+        return;
+      }
+
+      if (lower.includes('last')) {
+        setObjects((current) => current.slice(0, -1));
+        return;
+      }
+
+      setObjects((current) => {
+        if (!current.length) return current;
+        return current.filter((item) => {
+          const matches = item.type === removalType || (item.label && item.label.toLowerCase().includes(removalType));
+          return !matches;
+        });
+      });
+      return;
+    }
+
+    const type = detectType(trimmed);
+    const color = detectColor(trimmed);
+    const loc = detectLocation(trimmed);
+    const labelValue = type === 'text' ? (trimmed.replace(/^(add|create|place|put)\s+/i, '').trim() || 'Text') : undefined;
+
+    const newObject = {
+      id: Date.now() + Math.random(),
+      type,
+      color,
+      x: loc.x,
+      y: loc.y,
+      size: type === 'text' ? 36 : 72,
+      rotation: 0,
+      label: labelValue,
+    };
+
+    setObjects((current) => [...current, newObject]);
+    setPrompt('');
+  }
+
+  function clearObjects() {
+    setObjects([]);
+  }
+
   function downloadImage() {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -133,6 +377,16 @@ function App() {
     link.href = canvas.toDataURL('image/png');
     link.download = fileName.replace(/\.[^/.]+$/, '') + '-edited.png';
     link.click();
+  }
+
+  async function copyHtml() {
+    try {
+      await navigator.clipboard.writeText(fileName);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch {
+      console.error('Copy failed');
+    }
   }
 
   return (
@@ -159,6 +413,25 @@ function App() {
 
       <main className="editor-layout">
         <aside className="sidebar glass-panel">
+          <div className="panel-block">
+            <p className="small-label">AI prompt</p>
+            <textarea
+              className="ai-prompt"
+              rows={3}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Example: Add a gold star in the top-right"
+            />
+            <div className="prompt-actions">
+              <button type="button" className="primary-btn prompt-btn" onClick={applyAiPrompt}>
+                Add / remove object
+              </button>
+              <button type="button" className="secondary-btn" onClick={clearObjects}>
+                Clear objects
+              </button>
+            </div>
+          </div>
+
           <div className="panel-block">
             <p className="small-label">Presets</p>
             <div className="preset-grid">
@@ -206,7 +479,12 @@ function App() {
         <section className="canvas-panel glass-panel">
           <div className="canvas-toolbar">
             <span className="file-badge">{fileName}</span>
-            <span className="status-pill">Live edit</span>
+            <div className="toolbar-right">
+              <span className="status-pill">Live edit</span>
+              <button type="button" className="mini-btn" onClick={copyHtml}>
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
           </div>
 
           <div className="canvas-stage">

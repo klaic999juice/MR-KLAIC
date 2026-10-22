@@ -140,12 +140,33 @@ button:hover {
   cursor: pointer;
 }
 
+.primary-btn,
+.secondary-btn,
+.mini-btn {
+  border-radius: 12px;
+  font-weight: 700;
+}
+
 .primary-btn {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: white;
   padding: 11px 18px;
-  font-weight: 700;
   box-shadow: 0 14px 26px rgba(124, 58, 237, 0.28);
+}
+
+.secondary-btn,
+.mini-btn {
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.secondary-btn {
+  padding: 10px 14px;
+}
+
+.mini-btn {
+  padding: 8px 12px;
 }
 
 .editor-layout {
@@ -175,6 +196,28 @@ button:hover {
   letter-spacing: 0.15em;
   color: var(--muted);
   margin-bottom: 14px;
+}
+
+.ai-prompt {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(148, 163, 184, 0.06);
+  color: var(--text);
+  padding: 12px 14px;
+  outline: none;
+}
+
+.prompt-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.prompt-btn {
+  flex: 1;
 }
 
 .preset-grid {
@@ -250,6 +293,12 @@ input[type='range'] {
   margin-bottom: 16px;
 }
 
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .file-badge,
 .status-pill {
   display: inline-flex;
@@ -320,6 +369,10 @@ input[type='range'] {
   .top-actions {
     width: 100%;
     justify-content: center;
+  }
+
+  .prompt-actions {
+    flex-direction: column;
   }
 
   .preset-grid {
