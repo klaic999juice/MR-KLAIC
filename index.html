@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page Forge Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand-mark">P</div>
+          <div>
+            <p class="eyebrow">Website editor</p>
+            <h1>Page Forge Studio</h1>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <label class="field-inline">
+            <span>Title</span>
+            <input id="pageTitle" type="text" value="Launch your next idea" />
+          </label>
+
+          <label class="field-inline color-field">
+            <span>Accent</span>
+            <input id="accentColor" type="color" value="#7c3aed" />
+          </label>
+
+          <button id="themeToggle" class="ghost-btn" type="button">Dark mode</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="panel editor-panel">
+          <div class="panel-header">
+            <h2>HTML editor</h2>
+            <div class="button-row">
+              <button id="applyBtn" class="primary-btn" type="button">Apply</button>
+              <button id="resetBtn" class="ghost-btn" type="button">Reset</button>
+            </div>
+          </div>
+
+          <textarea id="htmlEditor" spellcheck="false" aria-label="HTML editor"></textarea>
+        </section>
+
+        <section class="panel preview-panel">
+          <div class="panel-header">
+            <h2>Live preview</h2>
+            <div class="button-row">
+              <button id="copyBtn" class="ghost-btn" type="button">Copy HTML</button>
+              <button id="downloadBtn" class="primary-btn" type="button">Download</button>
+            </div>
+          </div>
+
+          <div id="preview" class="preview-frame" aria-live="polite"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
