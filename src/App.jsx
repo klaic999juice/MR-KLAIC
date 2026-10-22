@@ -1,236 +1,232 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-const defaultMarkup = `<section class="hero">
-  <span class="eyebrow-tag">Launch faster</span>
-  <h1>Build products that feel premium from day one.</h1>
-  <p>
-    Turn your next idea into a polished digital experience with a messaging system,
-    conversion-focused design, and a launch-ready website that looks premium.
-  </p>
-  <div class="cta-row">
-    <a class="button" href="#">Start free</a>
-    <a class="button-secondary" href="#">Book demo</a>
-  </div>
-</section>
+const defaultSvg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+    <defs>
+      <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+        <stop offset="0%" stop-color="#7c3aed"/>
+        <stop offset="50%" stop-color="#2563eb"/>
+        <stop offset="100%" stop-color="#14b8a6"/>
+      </linearGradient>
+    </defs>
+    <rect width="1400" height="900" fill="url(#bg)"/>
+    <circle cx="1120" cy="210" r="210" fill="rgba(255,255,255,0.18)"/>
+    <circle cx="350" cy="780" r="260" fill="rgba(255,255,255,0.12)"/>
+    <rect x="150" y="180" width="1100" height="540" rx="44" fill="rgba(15,23,42,0.18)" stroke="rgba(255,255,255,0.32)"/>
+    <rect x="260" y="270" width="420" height="300" rx="28" fill="rgba(255,255,255,0.18)"/>
+    <path d="M830 350 L1010 350 L1160 470 L1010 610 L830 610 L690 470 Z" fill="rgba(255,255,255,0.28)"/>
+    <rect x="300" y="610" width="260" height="16" rx="8" fill="rgba(255,255,255,0.7)"/>
+    <rect x="300" y="640" width="190" height="16" rx="8" fill="rgba(255,255,255,0.45)"/>
+    <text x="300" y="240" fill="white" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="700">Creative launch</text>
+  </svg>
+`;
 
-<div class="stats">
-  <div class="stat-card">
-    <strong>4.9/5</strong>
-    <span>Average rating</span>
-  </div>
-  <div class="stat-card">
-    <strong>2.4x</strong>
-    <span>Faster launches</span>
-  </div>
-  <div class="stat-card">
-    <strong>12k+</strong>
-    <span>Teams using it</span>
-  </div>
-</div>
+const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(defaultSvg)}`;
 
-<div class="feature-strip">
-  <div class="feature">
-    <div class="badge">A</div>
-    <h3>Audience clarity</h3>
-    <p>Shape your message around the problems your product solves best.</p>
-  </div>
-  <div class="feature">
-    <div class="badge">B</div>
-    <h3>Design speed</h3>
-    <p>Ship more polished experiences without starting from a blank page.</p>
-  </div>
-  <div class="feature">
-    <div class="badge">C</div>
-    <h3>Conversion focus</h3>
-    <p>Guide visitors toward action with clear, clean calls to action.</p>
-  </div>
-</div>`;
+const presetMap = {
+  Natural: { brightness: 100, contrast: 100, saturation: 100, sepia: 0, grayscale: 0, blur: 0, hue: 0, rotate: 0, flipH: false, flipV: false },
+  Warm: { brightness: 110, contrast: 120, saturation: 122, sepia: 16, grayscale: 0, blur: 0, hue: 10, rotate: 0, flipH: false, flipV: false },
+  Mono: { brightness: 105, contrast: 115, saturation: 40, sepia: 0, grayscale: 100, blur: 0, hue: 0, rotate: 0, flipH: false, flipV: false },
+  Drama: { brightness: 96, contrast: 140, saturation: 140, sepia: 10, grayscale: 0, blur: 1, hue: -10, rotate: 0, flipH: false, flipV: false },
+  Dream: { brightness: 110, contrast: 90, saturation: 120, sepia: 24, grayscale: 0, blur: 2, hue: 18, rotate: 0, flipH: false, flipV: false },
+  Soft: { brightness: 115, contrast: 90, saturation: 80, sepia: 8, grayscale: 10, blur: 1, hue: 0, rotate: 0, flipH: false, flipV: false }
+};
 
 function App() {
-  const [markup, setMarkup] = useState(() => {
-    const saved = localStorage.getItem('novaStudioState');
-    if (!saved) return defaultMarkup;
-    try {
-      return JSON.parse(saved).markup || defaultMarkup;
-    } catch {
-      return defaultMarkup;
-    }
-  });
-
-  const [title, setTitle] = useState(() => {
-    const saved = localStorage.getItem('novaStudioState');
-    if (!saved) return 'Build launches people remember';
-    try {
-      return JSON.parse(saved).title || 'Build launches people remember';
-    } catch {
-      return 'Build launches people remember';
-    }
-  });
-
-  const [accent, setAccent] = useState(() => {
-    const saved = localStorage.getItem('novaStudioState');
-    if (!saved) return '#7c3aed';
-    try {
-      return JSON.parse(saved).accent || '#7c3aed';
-    } catch {
-      return '#7c3aed';
-    }
-  });
-
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('novaStudioState');
-    if (!saved) return false;
-    try {
-      return Boolean(JSON.parse(saved).isDark);
-    } catch {
-      return false;
-    }
-  });
-
-  const [copied, setCopied] = useState(false);
+  const canvasRef = useRef(null);
+  const [imageSrc, setImageSrc] = useState(dataUrl);
+  const [fileName, setFileName] = useState('creative-launch.png');
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
+  const [sepia, setSepia] = useState(0);
+  const [grayscale, setGrayscale] = useState(0);
+  const [blur, setBlur] = useState(0);
+  const [hue, setHue] = useState(0);
+  const [rotate, setRotate] = useState(0);
+  const [flipH, setFlipH] = useState(false);
+  const [flipV, setFlipV] = useState(false);
+  const [activePreset, setActivePreset] = useState('Natural');
 
   useEffect(() => {
-    const payload = JSON.stringify({ title, accent, isDark: darkMode, markup });
-    localStorage.setItem('novaStudioState', payload);
-  }, [title, accent, darkMode, markup]);
+    renderCanvas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [imageSrc, brightness, contrast, saturation, sepia, grayscale, blur, hue, rotate, flipH, flipV]);
 
-  useEffect(() => {
-    document.documentElement.style.setProperty('--accent', accent);
-    document.documentElement.style.setProperty('--accent-strong', darkenColor(accent));
-  }, [accent]);
+  function renderCanvas() {
+    const canvas = canvasRef.current;
+    if (!canvas || !imageSrc) return;
 
-  useEffect(() => {
-    document.body.classList.toggle('dark', darkMode);
-    document.title = title.trim() || 'Nova Studio';
-  }, [darkMode, title]);
+    const ctx = canvas.getContext('2d');
+    const image = new Image();
+    image.onload = () => {
+      const rot = ((rotate % 360) + 360) % 360;
+      const isPortrait = rot === 90 || rot === 270;
 
-  function darkenColor(hex) {
-    const normalized = hex.replace('#', '');
-    const value = Number.parseInt(normalized, 16);
-    const r = (value >> 16) & 255;
-    const g = (value >> 8) & 255;
-    const b = value & 255;
+      const width = isPortrait ? image.height : image.width;
+      const height = isPortrait ? image.width : image.height;
 
-    const darken = (channel) => Math.max(0, Math.round(channel * 0.8));
-    return `#${[darken(r), darken(g), darken(b)]
-      .map((channel) => channel.toString(16).padStart(2, '0'))
-      .join('')}`;
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rot * Math.PI) / 180);
+      ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+      ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) sepia(${sepia}%) grayscale(${grayscale}%) blur(${blur}px) hue-rotate(${hue}deg)`;
+      ctx.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
+      ctx.restore();
+    };
+
+    image.src = imageSrc;
   }
 
-  function resetEditor() {
-    setMarkup(defaultMarkup);
-    setTitle('Build launches people remember');
-    setAccent('#7c3aed');
-    setDarkMode(false);
+  function handleUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFileName(file.name || 'uploaded-photo.png');
+      setImageSrc(String(reader.result));
+    };
+    reader.readAsDataURL(file);
   }
 
-  function applyChanges() {
-    document.title = title.trim() || 'Nova Studio';
+  function applyPreset(name) {
+    const preset = presetMap[name];
+    if (!preset) return;
+
+    setActivePreset(name);
+    setBrightness(preset.brightness);
+    setContrast(preset.contrast);
+    setSaturation(preset.saturation);
+    setSepia(preset.sepia);
+    setGrayscale(preset.grayscale);
+    setBlur(preset.blur);
+    setHue(preset.hue);
+    setRotate(preset.rotate);
+    setFlipH(preset.flipH);
+    setFlipV(preset.flipV);
   }
 
-  async function copyHtml() {
-    try {
-      await navigator.clipboard.writeText(markup);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {
-      console.error('Copy failed');
-    }
+  function resetAdjustments() {
+    setActivePreset('Natural');
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setSepia(0);
+    setGrayscale(0);
+    setBlur(0);
+    setHue(0);
+    setRotate(0);
+    setFlipH(false);
+    setFlipV(false);
   }
 
-  function downloadHtml() {
-    const blob = new Blob([markup], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+  function downloadImage() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const link = document.createElement('a');
-    link.href = url;
-    link.download = `${(title || 'page').toLowerCase().replace(/\s+/g, '-')}.html`;
-    document.body.appendChild(link);
+    link.href = canvas.toDataURL('image/png');
+    link.download = fileName.replace(/\.[^/.]+$/, '') + '-edited.png';
     link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
   }
 
   return (
-    <div className="app-shell">
-      <header className="topbar glass-panel">
+    <div className="editor-shell">
+      <header className="editor-topbar">
         <div className="brand-wrap">
-          <div className="brand-mark">N</div>
-          <div className="brand-copy">
-            <p className="eyebrow">website editor</p>
-            <h1>Nova Studio</h1>
+          <div className="brand-mark">P</div>
+          <div>
+            <p className="eyebrow">photo editor</p>
+            <h1>PixelForge</h1>
           </div>
         </div>
 
-        <nav className="topnav" aria-label="Main navigation">
-          <span className="nav-pill active">Designer</span>
-          <span className="nav-pill">Templates</span>
-          <span className="nav-pill">Exports</span>
-        </nav>
-
-        <div className="toolbar">
-          <label className="field-inline" aria-label="Page title input">
-            <span>Title</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} type="text" />
+        <div className="top-actions">
+          <label className="upload-btn">
+            <input type="file" accept="image/*" onChange={handleUpload} />
+            Upload photo
           </label>
-
-          <label className="field-inline color-field" aria-label="Accent color picker">
-            <span>Accent</span>
-            <input value={accent} onChange={(e) => setAccent(e.target.value)} type="color" />
-          </label>
-
-          <button className="ghost-btn" type="button" onClick={() => setDarkMode((current) => !current)}>
-            {darkMode ? 'Light mode' : 'Dark mode'}
+          <button className="primary-btn" type="button" onClick={downloadImage}>
+            Download
           </button>
         </div>
       </header>
 
-      <main className="workspace">
-        <section className="panel glass-panel editor-panel">
-          <div className="panel-header">
-            <div className="header-title">
-              <span className="status-dot"></span>
-              <h2>Code editor</h2>
-            </div>
-
-            <div className="button-row">
-              <button className="primary-btn" type="button" onClick={applyChanges}>
-                Apply
-              </button>
-              <button className="ghost-btn" type="button" onClick={resetEditor}>
-                Reset
-              </button>
-            </div>
-          </div>
-
-          <textarea
-            aria-label="HTML editor"
-            spellCheck={false}
-            value={markup}
-            onChange={(e) => setMarkup(e.target.value)}
-          />
-        </section>
-
-        <section className="panel glass-panel preview-panel">
-          <div className="panel-header">
-            <div className="header-title">
-              <span className="status-dot success"></span>
-              <h2>Live preview</h2>
-            </div>
-
-            <div className="button-row">
-              <button className="ghost-btn" type="button" onClick={copyHtml}>
-                {copied ? 'Copied' : 'Copy code'}
-              </button>
-              <button className="primary-btn" type="button" onClick={downloadHtml}>
-                Download
-              </button>
+      <main className="editor-layout">
+        <aside className="sidebar glass-panel">
+          <div className="panel-block">
+            <p className="small-label">Presets</p>
+            <div className="preset-grid">
+              {Object.keys(presetMap).map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  className={`preset-btn ${activePreset === preset ? 'active' : ''}`}
+                  onClick={() => applyPreset(preset)}
+                >
+                  {preset}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="preview-frame" dangerouslySetInnerHTML={{ __html: markup }} />
+          <div className="panel-block">
+            <p className="small-label">Quick tune</p>
+            <Slider label="Brightness" value={brightness} min={0} max={200} onChange={setBrightness} />
+            <Slider label="Contrast" value={contrast} min={0} max={200} onChange={setContrast} />
+            <Slider label="Saturation" value={saturation} min={0} max={200} onChange={setSaturation} />
+            <Slider label="Sepia" value={sepia} min={0} max={100} onChange={setSepia} />
+            <Slider label="Grayscale" value={grayscale} min={0} max={100} onChange={setGrayscale} />
+            <Slider label="Blur" value={blur} min={0} max={12} onChange={setBlur} />
+            <Slider label="Hue" value={hue} min={-180} max={180} onChange={setHue} />
+            <Slider label="Rotate" value={rotate} min={-180} max={180} onChange={setRotate} />
+          </div>
+
+          <div className="panel-block">
+            <p className="small-label">Transform</p>
+            <div className="toggle-row">
+              <button type="button" className={`toggle-btn ${flipH ? 'active' : ''}`} onClick={() => setFlipH((prev) => !prev)}>
+                Flip horizontal
+              </button>
+              <button type="button" className={`toggle-btn ${flipV ? 'active' : ''}`} onClick={() => setFlipV((prev) => !prev)}>
+                Flip vertical
+              </button>
+            </div>
+            <button type="button" className="reset-btn" onClick={resetAdjustments}>
+              Reset all
+            </button>
+          </div>
+        </aside>
+
+        <section className="canvas-panel glass-panel">
+          <div className="canvas-toolbar">
+            <span className="file-badge">{fileName}</span>
+            <span className="status-pill">Live edit</span>
+          </div>
+
+          <div className="canvas-stage">
+            <canvas ref={canvasRef} />
+          </div>
         </section>
       </main>
     </div>
+  );
+}
+
+function Slider({ label, value, min, max, onChange }) {
+  return (
+    <label className="slider-wrap">
+      <div className="slider-head">
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </div>
+      <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </label>
   );
 }
 
