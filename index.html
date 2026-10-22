@@ -3,30 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Page Forge Studio</title>
+    <meta
+      name="description"
+      content="Modern website editor and live preview studio for building landing pages and marketing sites."
+    />
+    <title>StudioFlow Editor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="page-bg"></div>
+
     <div class="app-shell">
-      <header class="topbar">
+      <header class="topbar glass-panel">
         <div class="brand-wrap">
-          <div class="brand-mark">P</div>
-          <div>
-            <p class="eyebrow">Website editor</p>
-            <h1>Page Forge Studio</h1>
+          <div class="brand-mark">S</div>
+          <div class="brand-copy">
+            <p class="eyebrow">website editor</p>
+            <h1>StudioFlow</h1>
           </div>
         </div>
 
+        <nav class="topnav" aria-label="Main navigation">
+          <span class="nav-pill active">Designer</span>
+          <span class="nav-pill">Templates</span>
+          <span class="nav-pill">Exports</span>
+        </nav>
+
         <div class="toolbar">
-          <label class="field-inline">
+          <label class="field-inline" aria-label="Page title input">
             <span>Title</span>
-            <input id="pageTitle" type="text" value="Launch your next idea" />
+            <input id="pageTitle" type="text" value="Ship better ideas faster" />
           </label>
 
-          <label class="field-inline color-field">
+          <label class="field-inline color-field" aria-label="Accent color picker">
             <span>Accent</span>
             <input id="accentColor" type="color" value="#7c3aed" />
           </label>
@@ -36,9 +51,13 @@
       </header>
 
       <main class="workspace">
-        <section class="panel editor-panel">
+        <section class="panel glass-panel editor-panel">
           <div class="panel-header">
-            <h2>HTML editor</h2>
+            <div class="header-title">
+              <span class="status-dot"></span>
+              <h2>Code editor</h2>
+            </div>
+
             <div class="button-row">
               <button id="applyBtn" class="primary-btn" type="button">Apply</button>
               <button id="resetBtn" class="ghost-btn" type="button">Reset</button>
@@ -48,11 +67,15 @@
           <textarea id="htmlEditor" spellcheck="false" aria-label="HTML editor"></textarea>
         </section>
 
-        <section class="panel preview-panel">
+        <section class="panel glass-panel preview-panel">
           <div class="panel-header">
-            <h2>Live preview</h2>
+            <div class="header-title">
+              <span class="status-dot success"></span>
+              <h2>Live preview</h2>
+            </div>
+
             <div class="button-row">
-              <button id="copyBtn" class="ghost-btn" type="button">Copy HTML</button>
+              <button id="copyBtn" class="ghost-btn" type="button">Copy code</button>
               <button id="downloadBtn" class="primary-btn" type="button">Download</button>
             </div>
           </div>
