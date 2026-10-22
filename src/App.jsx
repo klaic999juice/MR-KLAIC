@@ -46,31 +46,37 @@ const colorMap = {
   teal: '#2dd4bf',
   gray: '#94a3b8',
   grey: '#94a3b8',
+  cyan: '#67e8f9',
+  silver: '#cbd5e1',
+  rose: '#fda4af',
+  lavender: '#c4b5fd',
 };
 
 const typeMap = {
-  star: ['star', 'sparkle', 'spark', 'burst'],
-  heart: ['heart', 'love'],
-  circle: ['circle', 'orb', 'dot', 'bubble'],
+  text: ['text', 'label', 'word', 'headline', 'title', 'caption'],
   cloud: ['cloud', 'clouds'],
-  flower: ['flower', 'rose', 'blossom'],
-  square: ['square', 'box', 'tile'],
-  triangle: ['triangle', 'mountain'],
-  sun: ['sun', 'sunburst'],
-  text: ['text', 'label', 'word', 'headline'],
+  flower: ['flower', 'flowers', 'rose', 'blossom', 'petal'],
+  heart: ['heart', 'hearts', 'love'],
+  circle: ['circle', 'circles', 'orb', 'dot', 'bubble'],
+  square: ['square', 'squares', 'box', 'boxes', 'tile', 'tiles'],
+  triangle: ['triangle', 'triangles', 'mountain', 'peak'],
+  sun: ['sun', 'sunburst', 'sunburst'],
+  star: ['star', 'stars', 'sparkle', 'sparkles', 'spark', 'burst'],
 };
 
 const locationMap = {
-  'top-left': { x: 0.22, y: 0.24 },
-  'top-right': { x: 0.82, y: 0.24 },
+  'top-left': { x: 0.2, y: 0.22 },
+  'top-right': { x: 0.8, y: 0.22 },
   'bottom-left': { x: 0.2, y: 0.8 },
   'bottom-right': { x: 0.8, y: 0.8 },
   center: { x: 0.5, y: 0.5 },
-  left: { x: 0.25, y: 0.5 },
-  right: { x: 0.75, y: 0.5 },
-  top: { x: 0.5, y: 0.25 },
-  bottom: { x: 0.5, y: 0.75 },
+  left: { x: 0.22, y: 0.5 },
+  right: { x: 0.78, y: 0.5 },
+  top: { x: 0.5, y: 0.2 },
+  bottom: { x: 0.5, y: 0.8 },
 };
+
+const validTypes = Object.keys(typeMap);
 
 function App() {
   const canvasRef = useRef(null);
@@ -87,7 +93,7 @@ function App() {
   const [flipH, setFlipH] = useState(false);
   const [flipV, setFlipV] = useState(false);
   const [objects, setObjects] = useState([]);
-  const [prompt, setPrompt] = useState('Add a golden star in the top-right');
+  const [prompt, setPrompt] = useState('Add a realistic blue cloud on the left');
   const [activePreset, setActivePreset] = useState('Natural');
   const [copied, setCopied] = useState(false);
 
@@ -95,6 +101,13 @@ function App() {
     renderCanvas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [imageSrc, brightness, contrast, saturation, sepia, grayscale, blur, hue, rotate, flipH, flipV, objects]);
+
+  function drawSoftShadow(ctx, size) {
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.18)';
+    ctx.beginPath();
+    ctx.ellipse(0, size * 0.8, size * 1.15, size * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   function drawObject(ctx, obj, canvasWidth, canvasHeight) {
     const x = obj.x * canvasWidth;
@@ -106,9 +119,13 @@ function App() {
     ctx.rotate((obj.rotation * Math.PI) / 180);
 
     const fill = obj.color || '#facc15';
+    const glow = obj.glow || 'rgba(255,255,255,0.45)';
+
     ctx.fillStyle = fill;
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
     ctx.lineWidth = 2;
+
+    drawSoftShadow(ctx, size);
 
     switch (obj.type) {
       case 'star': {
@@ -126,13 +143,17 @@ function App() {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.48, 0, Math.PI * 2);
+        ctx.fill();
         break;
       }
       case 'heart': {
         ctx.beginPath();
-        ctx.moveTo(0, size * 0.35);
-        ctx.bezierCurveTo(size * 0.55, -size * 0.7, size * 1.2, size * 0.2, 0, size * 1.1);
-        ctx.bezierCurveTo(-size * 1.2, size * 0.2, -size * 0.55, -size * 0.7, 0, size * 0.35);
+        ctx.moveTo(0, size * 0.3);
+        ctx.bezierCurveTo(size * 0.6, -size * 0.8, size * 1.2, size * 0.22, 0, size * 1.12);
+        ctx.bezierCurveTo(-size * 1.2, size * 0.22, -size * 0.6, -size * 0.8, 0, size * 0.3);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -150,10 +171,9 @@ function App() {
         ctx.arc(0, 0, size * 0.9, 0, Math.PI * 2);
         ctx.fill();
         for (let i = 0; i < 12; i += 1) {
-          const angle = (Math.PI / 6) * i;
           ctx.save();
-          ctx.rotate(angle);
-          ctx.fillRect(0, -size * 1.2, size * 0.18, size * 0.7);
+          ctx.rotate((Math.PI / 6) * i);
+          ctx.fillRect(-size * 0.1, -size * 1.28, size * 0.2, size * 0.7);
           ctx.restore();
         }
         ctx.stroke();
@@ -161,11 +181,11 @@ function App() {
       }
       case 'cloud': {
         ctx.beginPath();
-        ctx.arc(-size * 0.5, size * 0.15, size * 0.5, 0, Math.PI * 2);
+        ctx.arc(-size * 0.5, size * 0.12, size * 0.52, 0, Math.PI * 2);
         ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2);
-        ctx.arc(size * 0.5, size * 0.15, size * 0.5, 0, Math.PI * 2);
-        ctx.quadraticCurveTo(size * 0.8, size * 0.7, 0, size * 0.9);
-        ctx.quadraticCurveTo(-size * 0.8, size * 0.7, -size * 0.5, size * 0.15);
+        ctx.arc(size * 0.5, size * 0.12, size * 0.52, 0, Math.PI * 2);
+        ctx.quadraticCurveTo(size * 0.8, size * 0.75, 0, size * 0.92);
+        ctx.quadraticCurveTo(-size * 0.8, size * 0.75, -size * 0.5, size * 0.12);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -176,12 +196,12 @@ function App() {
           ctx.save();
           ctx.rotate((Math.PI / 4) * i);
           ctx.beginPath();
-          ctx.ellipse(0, -size * 0.4, size * 0.18, size * 0.75, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, -size * 0.38, size * 0.18, size * 0.75, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
         ctx.beginPath();
-        ctx.arc(0, 0, size * 0.35, 0, Math.PI * 2);
+        ctx.arc(0, 0, size * 0.32, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         break;
@@ -193,7 +213,7 @@ function App() {
       }
       case 'triangle': {
         ctx.beginPath();
-        ctx.moveTo(0, -size * 1.1);
+        ctx.moveTo(0, -size * 1.05);
         ctx.lineTo(size * 1.05, size * 0.95);
         ctx.lineTo(-size * 1.05, size * 0.95);
         ctx.closePath();
@@ -203,6 +223,8 @@ function App() {
       }
       case 'text': {
         ctx.font = `700 ${size}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillStyle = fill;
         ctx.strokeStyle = 'rgba(15,23,42,0.35)';
         ctx.lineWidth = 2;
@@ -293,18 +315,11 @@ function App() {
 
   function detectColor(text) {
     const lower = text.toLowerCase();
-    for (const [name, hex] of Object.entries(colorMap)) {
+    const entries = Object.entries(colorMap);
+    for (const [name, hex] of entries) {
       if (lower.includes(name)) return hex;
     }
     return '#facc15';
-  }
-
-  function detectType(text) {
-    const lower = text.toLowerCase();
-    for (const [type, matches] of Object.entries(typeMap)) {
-      if (matches.some((match) => lower.includes(match))) return type;
-    }
-    return 'star';
   }
 
   function detectLocation(text) {
@@ -315,22 +330,66 @@ function App() {
     return { x: 0.8, y: 0.2 };
   }
 
+  function detectSize(text) {
+    const lower = text.toLowerCase();
+    if (/(tiny|mini|small)/.test(lower)) return 42;
+    if (/(large|big|huge|giant|massive)/.test(lower)) return 120;
+    if (/(medium|normal)/.test(lower)) return 80;
+    if (/(small|tiny)/.test(lower)) return 52;
+    if (/(text|label)/.test(lower)) return 46;
+    return 72;
+  }
+
+  function detectType(text) {
+    const lower = text.toLowerCase();
+
+    const matches = validTypes
+      .map((type) => ({ type, score: typeMap[type].reduce((best, phrase) => Math.max(best, lower.includes(phrase) ? phrase.length : 0), 0) }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    if (matches.length > 0) return matches[0].type;
+
+    if (/(text|label|headline|title|caption)/.test(lower)) return 'text';
+    if (/(cloud|clouds)/.test(lower)) return 'cloud';
+    if (/(flower|rose|blossom|petal)/.test(lower)) return 'flower';
+    if (/(heart|love)/.test(lower)) return 'heart';
+    if (/(circle|orb|dot|bubble)/.test(lower)) return 'circle';
+    if (/(square|box|tile)/.test(lower)) return 'square';
+    if (/(triangle|mountain|peak)/.test(lower)) return 'triangle';
+    if (/(sun|sunburst)/.test(lower)) return 'sun';
+    return 'star';
+  }
+
+  function parseLabel(text, type) {
+    if (type !== 'text') return undefined;
+
+    const cleaned = text
+      .replace(/^(add|create|place|put|make)/gi, '')
+      .replace(/\b(text|label|headline|title|caption)\b/gi, '')
+      .replace(/\b(that says|with text|saying)\b/gi, '')
+      .trim();
+
+    const phrase = cleaned.match(/(?:say|says|saying|with|that)\s+["“']?([^"“”']+?)["“']?$/i)?.[1] || cleaned;
+    return phrase?.trim() || 'Launch';
+  }
+
   function applyAiPrompt() {
     const trimmed = prompt.trim();
     if (!trimmed) return;
 
     const lower = trimmed.toLowerCase();
-    const removeMode = lower.startsWith('remove') || lower.startsWith('delete') || lower.includes('remove') || lower.includes('delete');
+    const removeMode = /\b(remove|delete|clear|erase)\b/.test(lower);
 
     if (removeMode) {
-      const removalType = detectType(trimmed.replace(/remove|delete|the|a|an/g, ' '));
+      const removalType = detectType(trimmed);
 
-      if (lower.includes('all') || lower.includes('everything')) {
+      if (/(all|everything)/.test(lower)) {
         setObjects([]);
         return;
       }
 
-      if (lower.includes('last')) {
+      if (/(last|most recent)/.test(lower)) {
         setObjects((current) => current.slice(0, -1));
         return;
       }
@@ -348,7 +407,8 @@ function App() {
     const type = detectType(trimmed);
     const color = detectColor(trimmed);
     const loc = detectLocation(trimmed);
-    const labelValue = type === 'text' ? (trimmed.replace(/^(add|create|place|put)\s+/i, '').trim() || 'Text') : undefined;
+    const size = detectSize(trimmed);
+    const labelValue = parseLabel(trimmed, type);
 
     const newObject = {
       id: Date.now() + Math.random(),
@@ -356,9 +416,10 @@ function App() {
       color,
       x: loc.x,
       y: loc.y,
-      size: type === 'text' ? 36 : 72,
+      size,
       rotation: 0,
       label: labelValue,
+      glow: type === 'star' ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.35)',
     };
 
     setObjects((current) => [...current, newObject]);
@@ -420,7 +481,7 @@ function App() {
               rows={3}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Example: Add a gold star in the top-right"
+              placeholder="Example: Add a realistic blue cloud on the left"
             />
             <div className="prompt-actions">
               <button type="button" className="primary-btn prompt-btn" onClick={applyAiPrompt}>
