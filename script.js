@@ -1,28 +1,46 @@
 const defaultMarkup = `<section class="hero">
-  <span class="eyebrow-tag">Product launch</span>
-  <h1>Turn bold ideas into polished experiences.</h1>
+  <span class="eyebrow-tag">Launch faster</span>
+  <h1>Build products that feel premium from day one.</h1>
   <p>
-    Launch your next website faster with a clear story, conversion-focused messaging,
-    and a premium visual system that feels ready for real customers.
+    Turn your next idea into a polished digital experience with a messaging system,
+    conversion-focused design, and a launch-ready website that looks premium.
   </p>
   <div class="cta-row">
     <a class="button" href="#">Start free</a>
-    <a class="button-secondary" href="#">Book a demo</a>
+    <a class="button-secondary" href="#">Book demo</a>
   </div>
 </section>
 
-<div class="metrics">
-  <div class="metric-card">
+<div class="stats">
+  <div class="stat-card">
     <strong>4.9/5</strong>
-    <span>Average satisfaction</span>
+    <span>Average rating</span>
   </div>
-  <div class="metric-card">
+  <div class="stat-card">
     <strong>2.4x</strong>
     <span>Faster launches</span>
   </div>
-  <div class="metric-card">
+  <div class="stat-card">
     <strong>12k+</strong>
-    <span>Teams active monthly</span>
+    <span>Teams using it</span>
+  </div>
+</div>
+
+<div class="feature-strip">
+  <div class="feature">
+    <div class="badge">A</div>
+    <h3>Audience clarity</h3>
+    <p>Shape your message around the problems your product solves best.</p>
+  </div>
+  <div class="feature">
+    <div class="badge">B</div>
+    <h3>Design speed</h3>
+    <p>Ship more polished experiences without starting from a blank page.</p>
+  </div>
+  <div class="feature">
+    <div class="badge">C</div>
+    <h3>Conversion focus</h3>
+    <p>Guide visitors toward action with clear, clean calls to action.</p>
   </div>
 </div>`;
 
@@ -38,7 +56,7 @@ const downloadBtn = document.getElementById("downloadBtn");
 
 const savedState = JSON.parse(localStorage.getItem("pageForgeState") || "null");
 
-function adjustThemeColor(hex) {
+function computeDarkerColor(hex) {
   const normalized = hex.replace("#", "");
   const value = Number.parseInt(normalized, 16);
   const r = (value >> 16) & 255;
@@ -46,19 +64,17 @@ function adjustThemeColor(hex) {
   const b = value & 255;
 
   const darken = (channel) => Math.max(0, Math.round(channel * 0.82));
-  const darker = `#${[darken(r), darken(g), darken(b)]
+  return `#${[darken(r), darken(g), darken(b)]
     .map((channel) => channel.toString(16).padStart(2, "0"))
     .join("")}`;
-
-  document.documentElement.style.setProperty("--accent", hex);
-  document.documentElement.style.setProperty("--accent-strong", darker);
 }
 
 function applyMarkup() {
   const markup = htmlEditor.value;
   preview.innerHTML = markup;
-  document.title = pageTitleInput.value.trim() || "StudioFlow Editor";
-  adjustThemeColor(accentColorInput.value);
+  document.title = pageTitleInput.value.trim() || "Nova Studio";
+  document.documentElement.style.setProperty("--accent", accentColorInput.value);
+  document.documentElement.style.setProperty("--accent-strong", computeDarkerColor(accentColorInput.value));
 
   localStorage.setItem(
     "pageForgeState",
@@ -79,7 +95,7 @@ function setTheme(isDark) {
 
 function resetEditor() {
   htmlEditor.value = defaultMarkup;
-  pageTitleInput.value = "Ship better ideas faster";
+  pageTitleInput.value = "Build launches people remember";
   accentColorInput.value = "#7c3aed";
   setTheme(false);
   applyMarkup();
@@ -105,7 +121,7 @@ function downloadHtml() {
 }
 
 htmlEditor.value = savedState?.markup || defaultMarkup;
-pageTitleInput.value = savedState?.title || "Ship better ideas faster";
+pageTitleInput.value = savedState?.title || "Build launches people remember";
 accentColorInput.value = savedState?.accent || "#7c3aed";
 setTheme(Boolean(savedState?.isDark));
 applyMarkup();
