@@ -3,50 +3,50 @@ import { useMemo, useState } from 'react';
 const initialConversations = [
   {
     id: 1,
-    title: 'Product launch notes',
-    preview: 'Customer feedback and launch blockers.',
+    title: 'Launch brief',
+    preview: 'Customer feedback and final priorities.',
     timestamp: '2m ago',
     messages: [
       {
         id: 1,
         role: 'assistant',
-        text: 'Hi there — I can help you turn rough notes into a polished summary, action plan, or team update.',
+        text: 'Hello — I can help you turn notes into a concise summary, a strategic update, or a client-ready answer.',
       },
       {
         id: 2,
         role: 'user',
-        text: 'Summarize the latest customer feedback and highlight blockers.',
+        text: 'Give me a clean summary of our latest update.',
       },
       {
         id: 3,
         role: 'assistant',
-        text: 'Here is the summary: customers are happy with onboarding speed, but they want clearer pricing information and faster support replies. The main blocker is the handoff between product and support, which is slowing issue resolution.',
+        text: 'Here is the summary: momentum remains strong, customer response is encouraging, and the remaining priorities are clearer communication, faster follow-ups, and final QA before launch.',
       },
     ],
   },
   {
     id: 2,
-    title: 'Client follow-up',
-    preview: 'Drafting a concise proposal response.',
+    title: 'Client response',
+    preview: 'Drafting a concise and warm message.',
     timestamp: '1h ago',
     messages: [
       {
         id: 1,
         role: 'assistant',
-        text: 'I can draft a clear, professional response for your client in a few seconds.',
+        text: 'I can help draft a response that feels clear, polished, and professional.',
       },
     ],
   },
   {
     id: 3,
     title: 'Team sync',
-    preview: 'Reviewing tasks and next milestones.',
+    preview: 'Turning notes into tasks and next steps.',
     timestamp: 'Today',
     messages: [
       {
         id: 1,
         role: 'assistant',
-        text: 'We can turn meeting notes into an action list with owners and delivery dates.',
+        text: 'I can organize the discussion into action items, owners, and expected outcomes.',
       },
     ],
   },
@@ -63,22 +63,22 @@ function getAssistantReply(input) {
   const text = input.toLowerCase();
 
   if (text.includes('summary') || text.includes('summarize')) {
-    return 'Here is the summary: momentum is strong, the main risk is unclear ownership across the handoff, and the immediate focus is clearer communication with customers and stakeholders. The team should prioritize faster response times and clearer rollout notes before the next milestone.';
+    return 'Key takeaways: momentum is strong, the main risk is unclear ownership in the workflow, and the priority is to improve communication and final execution before the next milestone.';
   }
 
-  if (text.includes('reply') || text.includes('client') || text.includes('email')) {
-    return 'Here is a polished draft: “Thank you for your thoughtful feedback. We appreciate the opportunity to improve the experience and have incorporated your suggestions into the next revision. We will continue to share updates as we move through implementation and look forward to your continued input.”';
+  if (text.includes('reply') || text.includes('client') || text.includes('email') || text.includes('message')) {
+    return 'Suggested response: “Thank you for the thoughtful feedback. We appreciate the opportunity to improve the experience and have incorporated your suggestions into the next iteration. We will continue to share progress as we move toward launch and value your continued input.”';
   }
 
   if (text.includes('task') || text.includes('todo') || text.includes('plan')) {
-    return 'Action plan: 1) confirm priorities with the project owner, 2) assign support responsibilities, 3) publish the updated launch checklist, and 4) review the customer flow for the final QA pass.';
+    return 'Action plan: 1) align the owners for each deliverable, 2) confirm the launch checklist, 3) review support handoff, and 4) complete the final QA pass before release.';
   }
 
   if (text.includes('team') || text.includes('update')) {
-    return 'Team update: progress is tracking well, dependencies are manageable, and the biggest opportunity is improving clarity across reviews, communication, and final launch prep. We are aligned on the next milestones and can move quickly.';
+    return 'Team update: progress is moving forward smoothly, dependencies are under control, and the focus remains on clearer communication, faster response times, and final readiness before launch.';
   }
 
-  return 'I can help with that. I can summarize notes, draft a clear response, plan actions, or turn a rough idea into a polished brief for your team.';
+  return 'I can help with that. Whether you want a summary, a polished reply, a task list, or a brief, I can turn it into a clean and professional result.';
 }
 
 function App() {
@@ -101,7 +101,7 @@ function App() {
         {
           id: Date.now() + 1,
           role: 'assistant',
-          text: 'Hi — I can help you draft, summarize, plan, and refine your work. What would you like to do today?',
+          text: 'Hi — I can help you summarize, plan, write, and refine any idea. What would you like to work on?',
         },
       ],
     };
@@ -144,13 +144,13 @@ function App() {
   };
 
   return (
-    <div className="chat-shell">
+    <div className="app-shell">
       <aside className="sidebar glass-panel">
         <div className="brand-row">
-          <div className="brand-mark">M</div>
+          <div className="brand-mark">F</div>
           <div>
-            <p className="eyebrow">voice ai</p>
-            <h1>MemoWave</h1>
+            <p className="eyebrow">AI workspace</p>
+            <h1>FEAR ME</h1>
           </div>
         </div>
 
@@ -216,12 +216,12 @@ function App() {
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             rows={3}
-            placeholder="Ask MemoWave anything..."
+            placeholder="Ask FEAR ME anything..."
           />
 
           <div className="composer-actions">
             <button type="button" className="secondary-btn">
-              Attach audio
+              Attach file
             </button>
             <button type="button" className="primary-btn" onClick={sendMessage}>
               Send
@@ -234,5 +234,3 @@ function App() {
 }
 
 export default App;
-
-
